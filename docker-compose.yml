@@ -1,0 +1,42 @@
+version: "3.9"
+services:
+  api:
+    image: "persons-svc"
+    ports: 
+      - "8182:8080"
+    depends_on:
+      mysqldb: 
+        condition: service_healthy
+    environment: 
+      - SPRING_DATASOURCE_URL=jdbc:mysql://mysqldb:3306/personsdb?allowPublicKeyRetrieval=true&useSSL=false
+      - SPRING_DATASOURCE_USERNAME=root
+      - SPRING_DATASOURCE_PASSWORD=password1
+    networks:
+      - persons-svc-nw
+      
+  mysqldb:
+    image: mysql:8
+    volumes:
+      - ./mysql-dump:/docker-entrypoint-initdb.d
+    ports: 
+      - "3306:3306"
+    environment:
+      - MYSQL_ROOT_PASSWORD=password1
+      - MYSQL_DATABASE=personsdb
+      - MYSQL_PASSWORD=password1
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping","-h", "localhost","-uroot","-ppassword1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - persons-svc-nw
+  adminer:
+        image: adminer
+        restart: always
+        ports: 
+            - 8181:8080
+  
+networks:
+  persons-svc-nw:   
+   
